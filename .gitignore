@@ -1,0 +1,9 @@
+out/
+obj/
+bin/
+.vs/
+*.opendb
+*.db
+*.user
+*.aps
+CMakeSettings.json
