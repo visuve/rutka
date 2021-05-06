@@ -1,8 +1,10 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <locale>
 #include <random>
 #include <string>
+#include <string_view>
 
 namespace rutka
 {
@@ -18,32 +20,35 @@ namespace rutka
 		return distribution(engine);
 	}
 
-	bool is_number(const std::string& str)
+	bool is_number(std::wstring_view str)
 	{
 		if (str.empty())
 		{
 			return false;
 		}
 
-		return std::find_if(str.cbegin(), str.cend(), std::isdigit) != str.cend();
+		auto is_digit = [](wchar_t c)
+		{
+			static std::locale loc;
+			return std::isdigit(c, loc);
+		};
+
+		return std::all_of(str.cbegin(), str.cend(), isdigit);
 	}
 
 	template <typename T>
-	T read_numeric_input(const std::string& message)
+	T read_numeric_input(std::wstring_view message)
 	{
-		std::string input;
+		std::wstring input;
 
 		do
 		{
-			std::cout << message << std::endl;
-			std::cin.clear();
-			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			input.clear();
-			std::getline(std::cin, input);
+			std::wcout << message << std::endl;
+			std::wcin >> input;
 		} while (!is_number(input));
 
 		std::cout << std::endl;
-		return static_cast<T>(std::strtoll(input.c_str(), 0, 10));
+		return static_cast<T>(std::stoll(input, 0, 10));
 	}
 
 	template <typename T>
@@ -60,19 +65,27 @@ namespace rutka
 	}
 }
 
-
-int main(int argc, char** argv)
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+int wmain(int, wchar_t**)
 {
+	_setmode(_fileno(stdout), _O_U16TEXT);
+#else
+int main(int, char**)
+{
+	setlocale(LC_ALL, "en_US.UTF-8");
+#endif
 	using namespace rutka;
 
-	std::cout << "Intialainen Rutka" << std::endl;
-	std::cout << "Idea kopioitu: tAAt" << std::endl << std::endl;;
+	std::wcout << L"Intialainen Rutka" << std::endl;
+	std::wcout << L"Idea kopioitu: tAAt" << std::endl << std::endl;;
 
-	const uint32_t guess = read_numeric_input<uint32_t>("Syötä numero:");
+	const uint32_t guess = read_numeric_input<uint32_t>(L"Syötä numero:");
 
-	std::cout << "Syöttämäsi luku: " << guess << std::endl;
-	std::cout << "Koneen luku: " << generate_secret(guess) << std::endl;
-	std::cout << std::endl << "Hävisit rutkasti." << std::endl;
+	std::wcout << L"Syöttämäsi luku: " << guess << std::endl;
+	std::wcout << L"Koneen luku: " << generate_secret(guess) << std::endl;
+	std::wcout << std::endl << L"Hävisit rutkasti." << std::endl;
 
 	return 0;
 }
