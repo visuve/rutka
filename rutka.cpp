@@ -20,24 +20,24 @@ namespace rutka
 		return distribution(engine);
 	}
 
-	bool is_number(std::wstring_view str)
+	template <typename C>
+	bool is_number(std::basic_string_view<C> str)
 	{
 		if (str.empty())
 		{
 			return false;
 		}
 
-		auto is_digit = [](wchar_t c)
+		auto is_digit = [](C c)
 		{
 			static std::locale loc;
 			return std::isdigit(c, loc);
 		};
 
-		return std::all_of(str.cbegin(), str.cend(), isdigit);
+		return std::all_of(str.cbegin(), str.cend(), is_digit);
 	}
 
-	template <typename T>
-	T read_numeric_input(std::wstring_view message)
+	std::wstring read_numeric_input(std::wstring_view message)
 	{
 		std::wstring input;
 
@@ -45,21 +45,21 @@ namespace rutka
 		{
 			std::wcout << message << std::endl;
 			std::wcin >> input;
-		} while (!is_number(input));
+		} while (!is_number<wchar_t>(input));
 
 		std::cout << std::endl;
-		return static_cast<T>(std::stoll(input, 0, 10));
+		return input;
 	}
 
-	template <typename T>
-	T generate_secret(T guess)
+	std::wstring generate_numeric_secret(std::wstring_view guess)
 	{
-		T secret;
+		std::wstring secret;
 
 		do
 		{
-			secret = random_number<T>();
-		} while (guess == secret);
+			const uint64_t number = random_number<uint64_t>();
+			secret += std::to_wstring(number);
+		} while (secret.length() < guess.length());
 
 		return secret;
 	}
@@ -81,10 +81,10 @@ int main(int, char**)
 	std::wcout << L"Intialainen Rutka" << std::endl;
 	std::wcout << L"Idea kopioitu: tAAt" << std::endl << std::endl;;
 
-	const uint32_t guess = read_numeric_input<uint32_t>(L"Syötä numero:");
+	const std::wstring guess = read_numeric_input(L"Syötä numero:");
 
 	std::wcout << L"Syöttämäsi luku: " << guess << std::endl;
-	std::wcout << L"Koneen luku: " << generate_secret(guess) << std::endl;
+	std::wcout << L"Koneen luku: " << generate_numeric_secret(guess) << std::endl;
 	std::wcout << std::endl << L"Hävisit rutkasti." << std::endl;
 
 	return 0;
